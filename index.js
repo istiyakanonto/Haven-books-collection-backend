@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const MongoClient = require('mongodb').MongoClient;
 const cors =require('cors')
+const ObjectId= require('mongodb').ObjectId
 const bodyParser = require('body-parser')
 const port = process.env.PORT || 5050
 require('dotenv').config();
@@ -26,6 +27,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 client.connect(err => {
   console.log("Connection Error",err)
   const bookCollection = client.db("book").collection("haven");
+  const orderCollection = client.db("book").collection("order");
   console.log("Database Connected Successfully")
 
 //get data 
@@ -37,17 +39,43 @@ app.get('/bookCollection', (req, res)=>{
   })
 })
 
+app.get('/book/:id',(req, res)=>{
+
+bookCollection.find({_id: ObjectId(req.params.id)})
+.toArray((err,documents)=>{
+  
+  res.send(documents)
+})
+})
+
 
   //post data
   app.post('/addBook',(req,res) => {
     const newBook=req.body;
    bookCollection.insertOne(newBook)
    .then(result=>{
-     console.log('inserted Count:',result.insertedCount)
+    //  console.log('inserted Count:',result.insertedCount)
      res.send(result.insertedCount> 0)
    })
   })
   
+
+  app.post('/addOrders',(req,res) => {
+    const newOrder=req.body;
+   orderCollection.insertOne(newOrder)
+   .then(result=>{
+     console.log(result)
+     res.send(result.insertedCount> 0)
+   })
+  })
+
+  app.get('/orders', (req, res)=>{
+    orderCollection.find({email: req.query.email})
+    .toArray((err,items)=>{
+        res.send(items)
+     
+    })
+  })
   // client.close();
 });
 
